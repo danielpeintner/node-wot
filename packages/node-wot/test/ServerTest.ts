@@ -32,6 +32,7 @@ should();
 import Servient from "../src/servient";
 import * as listeners from "../src/resource-listeners/all-resource-listeners";
 import {ProtocolServer,Content,ResourceListener} from "../src/resource-listeners/protocol-interfaces"
+// import {RequestType} from "wot-typescript-definitions";
 
 // implement a testserver to mock a server
 class TestProtocolServer implements ProtocolServer {
@@ -157,13 +158,19 @@ class WoTServerTest {
             let inita : WoT.ThingActionInit = {name: "action1", inputDataDescription: JSON.stringify({ "type": "number" }), outputDataDescription: JSON.stringify({ "type": "number" }), semanticTypes: undefined, action: undefined};
             thing.addAction(inita);
 
-            let request : WoT.Request = {type: undefined, from: null, name: "action1", options : null, data: null, respond : undefined, respondWithError: undefined}; // WoT.RequestType.action, 
-
-            thing.onInvokeAction({"request" : request, "callback" : request => {
-                request.should.be.a("number");
-                request.should.equal(23);
+            // let request : WoT.Request = {type: RequestType.action, from: null, name: "action1", options : null, data: null, respond : undefined, respondWithError: undefined}; // WoT.RequestType.action
+             
+            thing.onInvokeAction(request => {
+                request.data.should.be.a("number");
+                request.data.should.equal(23);
                 return 42;
-            }});
+            });
+
+            // thing.onInvokeAction({"request" : request, "callback" : request => {
+            //     request.should.be.a("number");
+            //     request.should.equal(23);
+            //     return 42;
+            // }});
 
             return thing.invokeAction("action1", 23).then((result) => result.should.equal(42));
         })
@@ -174,12 +181,12 @@ class WoTServerTest {
             let inita : WoT.ThingActionInit = {name: "action1", inputDataDescription: JSON.stringify({ "type": "number" }), outputDataDescription: JSON.stringify({ "type": "number" }), semanticTypes: undefined, action: undefined};
             thing.addAction(inita);
 
-            let request : WoT.Request = {type: undefined, from: null, name: "action1", options : null, data: null, respond : undefined, respondWithError: undefined}; // WoT.RequestType.action, 
-            thing.onInvokeAction({"request" : request, "callback" : request => {
-                request.should.be.a("number");
-                request.should.equal(23);
+            // let request : WoT.Request = {type: undefined, from: null, name: "action1", options : null, data: null, respond : undefined, respondWithError: undefined}; // WoT.RequestType.action, 
+            thing.onInvokeAction(request => {
+                request.data.should.be.a("number");
+                request.data.should.equal(23);
                 return 42;
-            }});
+            });
             
             let listener = WoTServerTest.server.getListenerFor("/thing7/actions/action1");
             expect(listener).to.exist;

@@ -152,8 +152,8 @@ async.series([
       let req : WoT.Request = {type: WoT.RequestType.property, from: null, name: null, options : null, data: null, respond : undefined, respondWithError: undefined}; // WoT.RequestType.action, 
 
       let rhpBrightness : WoT.RequestHandler;
-      rhpBrightness.request = req;
-      rhpBrightness.callback = () => {
+      // rhpBrightness.request = req;
+      rhpBrightness = (req) => {
         console.log('New brightness: ' + req.data);
       };
       // rhpBrightness.name = "brightness";
@@ -164,7 +164,7 @@ async.series([
       // requestHandler property color
       let rhpColor : WoT.RequestHandler;
       // rhpColor.name = "color";
-      rhpColor.callback.call = (nu, old) => {
+      rhpColor.call = (nu, old) => {
         console.log('New color: ' + nu);
       };
 

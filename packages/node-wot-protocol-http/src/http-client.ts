@@ -95,6 +95,7 @@ export default class HttpClient implements ProtocolClient {
         });
       });
       req.on('error', err => reject(err));
+      console.log("Write body = " + JSON.stringify(content.body));
       req.write(content.body);
       req.end();
     });

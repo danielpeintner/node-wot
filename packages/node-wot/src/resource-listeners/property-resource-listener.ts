@@ -42,12 +42,14 @@ export default class PropertyResourceListener extends BasicResourceListener impl
         return this.thing
             .getProperty(this.name)
             .then((value) => {
+                console.log("onRead value: " + value);
                 let bytes = ContentSerdes.valueToBytes(value); // TODO where to get media type
                 return Promise.resolve(bytes);
             });
     }
 
     public onWrite(input : Content) : Promise<void> {
+        console.log("onWrite value: " + JSON.stringify(input));
         let value = ContentSerdes.bytesToValue(input); // TODO where to get media type
         return this.thing.setProperty(this.name, value);
     }

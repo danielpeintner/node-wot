@@ -43,6 +43,7 @@ class JsonCodec implements ContentCodec {
   }
 
   bytesToValue(bytes: Buffer): any {
+    console.log("bytesToValue value: " +  JSON.stringify(bytes));
     console.log(`JsonCodec parsing '${bytes.toString()}'`);
     let parsed: any;
     try {
@@ -69,6 +70,7 @@ class JsonCodec implements ContentCodec {
   }
 
   valueToBytes(value: any): Buffer {
+    console.log("valueToBytes value: " +  JSON.stringify(value));
     console.log(`JsonCodec serializing '${value}'`);
     let body = "";
     if(value !== undefined) {

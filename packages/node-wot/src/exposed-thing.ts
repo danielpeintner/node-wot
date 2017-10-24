@@ -17,6 +17,8 @@
  * to copyright in this work will at all times remain with copyright holders.
  */
 
+// import * as WoT from "wot-typescript-definitions";
+
 import {ResourceListener} from "./resource-listeners/protocol-interfaces"
 import {ThingDescription} from "node-wot-td-tools";
 import ConsumedThing from "./consumed-thing";
@@ -25,11 +27,21 @@ import * as Rest from "./resource-listeners/all-resource-listeners"
 import Servient from "./servient";
 import * as TDGenerator from "./td-generator"
 
+//import {RequestType} from "wot-typescript-definitions";
+// import * as WoT from 'wot-typescript-definitions';
+
 export default class ExposedThing extends ConsumedThing implements WoT.ExposedThing {
     // these arrays and their contents are mutable
     private interactions: Array<TD.Interaction> = [];
-    private interactionStates: { [key: string]: InteractionState } = {}; //TODO migrate to Map
+    // private interactionStates: { [key: string]: InteractionState } = {}; //TODO migrate to Map
+    private propertyStates: { [key: string]: InteractionState } = {}; //TODO migrate to Map
     private restListeners: Map<string, ResourceListener> = new Map<string, ResourceListener>();
+
+    private updatePropertyHandler: WoT.RequestHandler = undefined;
+    private retrievePropertyHandler: WoT.RequestHandler = undefined;
+    private invokeActionHandler: WoT.RequestHandler = undefined;
+    private observeHandler: WoT.RequestHandler = undefined;
+    
 
     constructor(servient: Servient, td: ThingDescription) { // name: string
         super(servient, td);
@@ -57,20 +69,37 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
     */
     public invokeAction(actionName: string, parameter?: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            console.log("Try to find action for: " + actionName);
-            let state = this.interactionStates[actionName];
-            if (state) {
-                console.log("Action state : " + state);
+            console.log("Try to invokeAction for: " + actionName + " (handler --> " + this.invokeActionHandler + ")");
 
-                if (state.handlers.length) {
-                    let handler = state.handlers[0];
-                    resolve(handler(parameter));
-                } else {
-                    reject(new Error("No handler for " + actionName + " on " + this.name));
-                }
+            if(this.invokeActionHandler != null) {
+                resolve(this.invokeActionHandler((
+                    {
+                        type: null, // WoT.RequestType.action, // error TS2686: 'WoT' refers to a UMD global, but the current file is a module. Consider adding an import instead.
+                        from: "",
+                        name: actionName,
+                        options: {},
+                        data: parameter,
+                        respond: null,
+                        respondWithError: null
+                    }
+                )));
             } else {
-                reject(new Error("No action " + actionName + " on " + this.name));
+                reject(new Error("No invokeAction handler set"));
             }
+
+            // let state = this.interactionStates[actionName];
+            // if (state) {
+            //     console.log("Action state : " + state);
+
+            //     if (state.handlers.length) {
+            //         let handler = state.handlers[0];
+            //         resolve(handler(parameter));
+            //     } else {
+            //         reject(new Error("No handler for " + actionName + " on " + this.name));
+            //     }
+            // } else {
+            //     reject(new Error("No action " + actionName + " on " + this.name));
+            // }
         });
     }
 
@@ -81,18 +110,59 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
      */
     public setProperty(propertyName: string, newValue: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let state = this.interactionStates[propertyName];
-            if (state) {
-                let oldValue = state.value;
-                state.value = newValue;
+            console.log("Try to setProperty for: " + propertyName + " (handler --> " + this.updatePropertyHandler + ")");
 
-                // calls all handlers
-                state.handlers.forEach(handler => handler.apply(this, [newValue, oldValue]))
+            // if(this.updatePropertyHandler != null) {
+            //     resolve(this.updatePropertyHandler((
+            //         {
+            //             type: null, // WoT.RequestType.property,
+            //             from: "",
+            //             name: propertyName,
+            //             options: {},
+            //             data: newValue,
+            //             respond: null,
+            //             respondWithError: null
+            //         }
+            //     )));
+            // } else {
+                // reject(new Error("No updateProperty handler set"));
+                let state = this.propertyStates[propertyName];
+                if (state) {
+                    let oldValue = state.value;
+                    state.value = newValue;
+                    // call handler if any
+                    if(this.updatePropertyHandler != null) {
+                        let req : WoT.Request = {
+                            type: null, // WoT.RequestType.property,
+                            from: "",
+                            name: propertyName,
+                            options: {},
+                            data: newValue,
+                            respond: null,
+                            respondWithError: null
+                        }
+                        // this.updatePropertyHandler.call(req);
+                        this.updatePropertyHandler.apply(this, req);
+                    }
+                    console.log("set new value for " + propertyName + " to: " + newValue);
+                    resolve(state.value);
+                } else {
+                    reject(new Error("No property called " + propertyName));
+                }
+            // }
 
-                resolve(newValue);
-            } else {
-                reject(new Error("No property called " + propertyName));
-            }
+            // let state = this.interactionStates[propertyName];
+            // if (state) {
+            //     let oldValue = state.value;
+            //     state.value = newValue;
+
+            //     // calls all handlers
+            //     state.handlers.forEach(handler => handler.apply(this, [newValue, oldValue]))
+
+            //     resolve(newValue);
+            // } else {
+            //     reject(new Error("No property called " + propertyName));
+            // }
         });
     }
 
@@ -102,12 +172,47 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
      */
     public getProperty(propertyName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let state = this.interactionStates[propertyName];
-            if (state) {
-                resolve(state.value);
-            } else {
-                reject(new Error("No property called " + propertyName));
-            }
+            super.getProperty(propertyName);
+
+            console.log("Try to getProperty for: " + propertyName + " (handler --> " + this.retrievePropertyHandler + ")");
+            
+            // if(this.retrievePropertyHandler != null) {
+            //     resolve(this.retrievePropertyHandler((
+            //         {
+            //             type: null, //  WoT.RequestType.property,
+            //             from: "",
+            //             name: propertyName,
+            //             options: {},
+            //             data: null,
+            //             respond: null,
+            //             respondWithError: null
+            //         }
+            //     )));
+            // } else {
+                // reject(new Error("No updateProperty handler set"));
+
+                let state = this.propertyStates[propertyName];
+                if (state) {
+                    console.log("in getProperty, state = " + JSON.stringify(state));
+                    // call handler if any
+                    if(this.retrievePropertyHandler != null) {
+                        this.retrievePropertyHandler.apply(this, [state.value]);
+                    }
+                    console.log("return value for " + propertyName + ": " + state.value);
+                    resolve(state.value);
+                } else {
+                    reject(new Error("No property called " + propertyName));
+                }
+            // }
+
+
+
+            // let state = this.interactionStates[propertyName];
+            // if (state) {
+            //     resolve(state.value);
+            // } else {
+            //     reject(new Error("No property called " + propertyName));
+            // }
         });
     }
 
@@ -145,7 +250,8 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
 
     /** @inheritDoc */
     onRetrieveProperty(handler: WoT.RequestHandler): ExposedThing {
-        // TODO implement onRetrieveProperty
+        this.retrievePropertyHandler = handler;
+
         return this;
     }
 
@@ -159,33 +265,38 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
     // (request: WoT.Request) => any
     // handler: WoT.RequestHandler
     onInvokeAction(handler: WoT.RequestHandler): ExposedThing {
-        let state = this.interactionStates[handler.request.name]; // actionName
-        if (state) {
-            if (state.handlers.length > 0) state.handlers.splice(0);
-            state.handlers.push(handler.callback); // cb
-        } else {
-            console.error("no such action " + handler.request.name + " on " + this.name);
-        }
+        this.invokeActionHandler = handler;
+
+        // let state = this.interactionStates[handler.request.name]; // actionName
+        // if (state) {
+        //     if (state.handlers.length > 0) state.handlers.splice(0);
+        //     state.handlers.push(handler); // .callback); // cb
+        // } else {
+        //     console.error("no such action " + handler.request.name + " on " + this.name);
+        // }
 
         return this;
     }
 
     /** @inheritDoc */
     onUpdateProperty(handler: WoT.RequestHandler): ExposedThing {
-        // propertyName: string, cb: (newValue: any, oldValue?: any) => void
-        let state = this.interactionStates[handler.request.name]; // propertyName
-        if (state) {
-            state.handlers.push(handler.callback); // cb
-        } else {
-            console.error("no such property " + handler.request.name + " on " + this.name);
-        }
+        this.updatePropertyHandler = handler;
+
+        // // propertyName: string, cb: (newValue: any, oldValue?: any) => void
+        // let state = this.interactionStates[handler.request.name]; // propertyName
+        // if (state) {
+        //     state.handlers.push(handler.callback); // cb
+        // } else {
+        //     console.error("no such property " + handler.request.name + " on " + this.name);
+        // }
 
         return this;
     }
 
     /** @inheritDoc */
     onObserve(handler: WoT.RequestHandler): ExposedThing {
-        // TODO implement onObserve
+        this.updatePropertyHandler = handler;
+
         return this;
     }
 
@@ -216,12 +327,15 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
         newProp.writable = property.writable;
 
         this.interactions.push(newProp);
+        console.log("Add property '" + property.name + "' to interactions");
 
         let propState = new InteractionState();
         propState.value = property.value; // initialValue;
-        propState.handlers = [];
-
-        this.interactionStates[property.name] = propState;
+        this.propertyStates[property.name] = propState;
+        console.log("in addProperty, state = " + JSON.stringify(propState));
+        // propState.handlers = [];
+        // this.interactionStates[property.name] = propState;
+        console.log("Add property '" + property.name + "' to propertyStates with value " + propState.value);
 
         this.addResourceListener("/" + this.name + "/properties/" + property.name, new Rest.PropertyResourceListener(this, newProp));
 
@@ -239,16 +353,16 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
         newAction.inputData = null; // inputType ? inputType : null;
         newAction.outputData = null; //  outputType ? outputType : null;
 
-     
         this.interactions.push(newAction);
+        console.log("Add action '" + action.name + "' to interactions");
 
-        let actionState = new InteractionState();
-        // actionState.value = action.action;
-        actionState.handlers = [];
+        // let actionState = new InteractionState();
+        // // actionState.value = action.action;
+        // actionState.handlers = [];
 
-        console.log("Add action '" + action.name + "' to interactionStates");
+        // console.log("Add action '" + action.name + "' to interactionStates");
 
-        this.interactionStates[action.name] = actionState;
+        // this.interactionStates[action.name] = actionState;
 
         this.addResourceListener("/" + this.name + "/actions/" + action.name, new Rest.ActionResourceListener(this, newAction));
 
@@ -265,32 +379,54 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
         newEvent.name = event.name; //  eventName;
 
         this.interactions.push(newEvent);
+        console.log("Add event '" + event.name + "' to interactions");
 
-         let eventState = new InteractionState();
-        eventState.handlers = [];
+        //  let eventState = new InteractionState();
+        // eventState.handlers = [];
 
-        this.interactionStates[event.name] = eventState;
+        // this.interactionStates[event.name] = eventState;
+
+        // TODO this.addResourceListener(...)
 
         return this;
     }
 
     /** @inheritDoc */
     removeProperty(propertyName: string): ExposedThing {
-        delete this.interactionStates[propertyName];
+        for (let i = this.interactions.length - 1; i >= 0; i--) {
+            if (this.interactions[i].pattern == TD.InteractionPattern.Property && this.interactions[i].name == propertyName) { 
+                this.interactions.splice(i, 1);
+            }
+        }
+
+        // delete this.interactionStates[propertyName];
         this.removeResourceListener(this.name + "/properties/" + propertyName)
         return this;
     }
 
     /** @inheritDoc */
     removeAction(actionName: string): ExposedThing {
-        delete this.interactionStates[actionName];
+        for (let i = this.interactions.length - 1; i >= 0; i--) {
+            if (this.interactions[i].pattern == TD.InteractionPattern.Action && this.interactions[i].name == actionName) { 
+                this.interactions.splice(i, 1);
+            }
+        }
+
+        // delete this.interactionStates[actionName];
         this.removeResourceListener(this.name + "/actions/" + actionName)
         return this;
     }
 
     /** @inheritDoc */
     removeEvent(eventName: string): ExposedThing {
-        // TODO 
+        for (let i = this.interactions.length - 1; i >= 0; i--) {
+            if (this.interactions[i].pattern == TD.InteractionPattern.Event && this.interactions[i].name == eventName) { 
+                this.interactions.splice(i, 1);
+            }
+        }
+
+        // TODO remove resource
+
         return this;
     }
 }
@@ -298,6 +434,6 @@ export default class ExposedThing extends ConsumedThing implements WoT.ExposedTh
 class InteractionState {
     public value: any;
     // public handlers: Array<(param?: any) => any> = [];
-    public handlers: Array<Function> = [];
-    public path: string;
+    // public handlers: Array<Function> = [];
+    // public path: string;
 }
