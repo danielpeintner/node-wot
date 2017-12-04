@@ -1,6 +1,9 @@
 
 /** TypeSystem based on https://w3c.github.io/wot-thing-description/#type-system  */
 
+export declare type TypeSystem = StringType | NumericType | ArrayType | ObjectType | BooleanType | NullType;
+
+/** enumeration of possible types */
 export enum Type {
     string,
     integer,
@@ -12,31 +15,49 @@ export enum Type {
 }
 
 
-/** Object properties */
-export interface FieldType {
-    /** The name attribute represents the field name. */
-    name: string;
 
-    value: TypeSystem;
-}
-
-export interface TypeSystem {
-
+/**
+ * Specify generic type attribute (e.g, boolean and null)
+ */
+export interface GenericType {    
     /** The type attribute represents the type name. */
     type: Type;
+}
+
+/**
+ * String Type features
+ * - "minLength": 2
+ * - "maxLength": 3
+ * - Regular Expressions: "pattern": "^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$"
+ * - Format: "date-time", "email", "hostname", "ipv4", "ipv6", "ipv6"
+ */
+export interface StringType extends GenericType  {
+    /** set to string type */
+    type: Type.string;
+}
+
+
+/**
+ * Numeric Type features
+ * - "multipleOf" e.g.,  10
+ * - range:  "minimum"/numericValue, "maximum"/numericValue, "exclusiveMinimum"/boolean and "exclusiveMaximum"/boolean
+ */
+export interface NumericType extends GenericType {
+    /** set to integer/number type */
+    type: Type.integer | Type.number;
 
     /**
      * minimum specifies a minimum numeric value
      * (Optional for Numeric types, forbidden for all other types)
      */
     minimum?: number;
-
+    
     /**
      * exclusiveMinimum is a boolean. When true, it indicates that the range excludes the minimum value
      * (Optional for Numeric types, forbidden for all other types)
      */
     exclusiveMinimum?: boolean;
-
+    
     /**
      * maximum specifies a maximum numeric value.
      * (Optional for Numeric types, forbidden for all other types)
@@ -48,40 +69,8 @@ export interface TypeSystem {
      * (Optional for Numeric types, forbidden for all other types) 
      */
     exclusiveMaximum?: boolean;
-
-    /* TODO String facets */
-
-    /** for object */
-    field? : FieldType[];
-
-    /** for arrays */
-    items? : TypeSystem;
-    minItems?: number;
-    maxItems?: number;
-
+    
 }
-
-/** General comments/questions
- * - any way to define conditional statements such as (if type integer OR number minimum available, in any othe case not)
- * 
- * 
- */
-
- 
-/**
- * String Type features
- * - "minLength": 2
- * - "maxLength": 3
- * - Regular Expressions: "pattern": "^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$"
- * - Format: "date-time", "email", "hostname", "ipv4", "ipv6", "ipv6"
- */
-
-
-/**
- * Numeric Type features
- * - "multipleOf" e.g.,  10
- * - range:  "minimum"/numericValue, "maximum"/numericValue, "exclusiveMinimum"/boolean and "exclusiveMaximum"/boolean
- */
 
 /**
  * Object Type features
@@ -92,6 +81,20 @@ export interface TypeSystem {
  * - dependencies ??
  * - "patternProperties":
  */
+export interface ObjectType extends GenericType  {
+    /** set to string type */
+    type: Type.object;
+
+    field? : FieldType[];
+}
+
+/** Object properties */
+export interface FieldType {
+    /** The name attribute represents the field name. */
+    name: string;
+
+    value: TypeSystem;
+}
 
  /**
  * Array Type features
@@ -100,6 +103,23 @@ export interface TypeSystem {
  * - Length: "minItems": 2 and "maxItems": 3
  * - "uniqueItems": true
  */
+export interface ArrayType extends GenericType  {
+    /** set to integer type */
+    type: Type.array;
+    items? : TypeSystem;
+    minItems?: number;
+    maxItems?: number;
+}
+
+export interface BooleanType extends GenericType  {
+    /** set to boolean type */
+    type: Type.boolean;
+}
+
+export interface NullType extends GenericType  {
+    /** set to null type */
+    type: 6; // Type.null causes TS error ts1003
+}
 
 
 /* Some examples */
@@ -141,43 +161,11 @@ let array1 : TypeSystem = {
     maxItems: 3
 };
 
-/** Example type that should be forbidden/not possible mix between integer and array type */
+/** Example type that should be forbidden/not possible: mix between integer and array type */
+/*
 let wrongInteger1 : TypeSystem = {
     type: Type.integer,
     minItems: 123
 };
 
-
-/**
- * 
- * EXPERIMANTAL!!!!!!!!!!!!!!!!!!!!
- * 
- */
-
-export interface ImprovedTypeSystem {
-    integer?: IntegerType;
-    array?: ArrayType;
-}
-
-export interface IntegerType {
-    minimum?: number;
-    maximum?: number;
-}
-
-export interface ArrayType {
-    minItems?: number;
-}
-
-
-let fooInteger1 : ImprovedTypeSystem = {
-    integer:  {minimum: 12, maximum: 18
-        // , minItems: 1 // not anymore possible
-    }
-};
-
-let fooArray1 : ImprovedTypeSystem = {
-    array:  {
-        // minimum: 12, maximum: 18  // not anymore possible
-        minItems: 1
-    }
-};
+*/
