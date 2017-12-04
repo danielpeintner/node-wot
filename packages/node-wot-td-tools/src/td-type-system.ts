@@ -17,9 +17,9 @@ export enum Type {
 
 
 /**
- * Specify generic type attribute (e.g, boolean and null)
+ * Specify abtract type attribute (e.g, boolean and null)
  */
-export interface GenericType {    
+export interface AbstractType {    
     /** The type attribute represents the type name. */
     type: Type;
 }
@@ -31,7 +31,7 @@ export interface GenericType {
  * - Regular Expressions: "pattern": "^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$"
  * - Format: "date-time", "email", "hostname", "ipv4", "ipv6", "ipv6"
  */
-export interface StringType extends GenericType  {
+export interface StringType extends AbstractType  {
     /** set to string type */
     type: Type.string;
 }
@@ -42,7 +42,7 @@ export interface StringType extends GenericType  {
  * - "multipleOf" e.g.,  10
  * - range:  "minimum"/numericValue, "maximum"/numericValue, "exclusiveMinimum"/boolean and "exclusiveMaximum"/boolean
  */
-export interface NumericType extends GenericType {
+export interface NumericType extends AbstractType {
     /** set to integer/number type */
     type: Type.integer | Type.number;
 
@@ -81,7 +81,7 @@ export interface NumericType extends GenericType {
  * - dependencies ??
  * - "patternProperties":
  */
-export interface ObjectType extends GenericType  {
+export interface ObjectType extends AbstractType  {
     /** set to string type */
     type: Type.object;
 
@@ -103,7 +103,7 @@ export interface FieldType {
  * - Length: "minItems": 2 and "maxItems": 3
  * - "uniqueItems": true
  */
-export interface ArrayType extends GenericType  {
+export interface ArrayType extends AbstractType  {
     /** set to integer type */
     type: Type.array;
     items? : TypeSystem;
@@ -111,12 +111,12 @@ export interface ArrayType extends GenericType  {
     maxItems?: number;
 }
 
-export interface BooleanType extends GenericType  {
+export interface BooleanType extends AbstractType  {
     /** set to boolean type */
     type: Type.boolean;
 }
 
-export interface NullType extends GenericType  {
+export interface NullType extends AbstractType  {
     /** set to null type */
     type: 6; // Type.null causes TS error ts1003
 }
