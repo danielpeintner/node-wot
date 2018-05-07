@@ -211,6 +211,124 @@ let tdSampleMetadata1 = `{
 
 
 
+/** Simplified TD */
+let tdSimple1 = `{
+  "@context": "https://w3c.github.io/wot/w3c-wot-td-context.jsonld",
+  "id": "urn:dev:wot:com:example:servient:lamp",
+  "name": "MyLampThing",
+  "properties": {
+      "status": {
+       "writable": false,
+       "observable": false,
+       "type": "string",
+       "form": [{
+           "href": "coaps://mylamp.example.com:5683/status",
+           "mediaType": "application/json"
+       }]
+  }},
+  "actions": {
+   "toggle": {
+      "form": [{
+          "href": "coaps://mylamp.example.com:5683/toggle",
+          "mediaType": "application/json"
+      }]}},
+  "events": {
+      "overheating": {
+          "type": "string",
+          "form": [{
+              "href": "coaps://mylamp.example.com:5683/oh",
+              "mediaType": "application/json"
+          }]
+      }}
+}`;
+
+
+
+interface Thing2 {
+  /** collection of string-based keys that reference values of any type */
+  readonly [ key: string ]: any; /* e.g., @context besides the one that are explitecly defined below */
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly base: string;
+
+  /** collection of string-based keys that reference a property of type Property2 */
+  readonly properties: {
+    [ key: string ]: Property2
+  };
+
+  /** collection of string-based keys that reference a property of type Action2 */
+  readonly actions: {
+    [ key: string ]: Action2;
+  }
+
+  /** collection of string-based keys that reference a property of type Event2 */
+  readonly events: {
+    [ key: string ]: Event2;
+  }
+  readonly securityDefinitions: Security2;
+}
+
+
+interface Interaction2 {
+  form: Array<Form2>;
+}
+
+interface Form2 {
+  href: string;
+  mediaType: string;
+  rel : string;
+  security: string; /* FIXME: what type */
+}
+
+interface Property2 extends Interaction2 {
+  writable: boolean;
+  observable: boolean;
+}
+
+interface Action2 extends Interaction2 {
+  /** TODO add definitions */
+}
+interface Event2 extends Interaction2 {
+  /** TODO add definitions */
+}
+
+interface Security2 {
+  readonly in: string;
+  readonly scheme: string;
+}
+
+
+
+/** A ThingTemplate is a dictionary that provides Thing related semantic metadata used for initializing a Thing Description */
+interface ThingTemplate2 {
+  /** collection of string-based keys that reference values of any type */
+  [ key: string ]: any;
+}
+
+
+interface ConsumedThing2 extends ThingTemplate2 {
+    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    readonly properties: {
+      [ key: string ]: ThingProperty2;
+    }
+    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    readonly actions: {
+      [ key: string ]: ThingAction2;
+    }
+    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    readonly events: {
+      [ key: string ]: ThingEvent2;
+    }
+}
+
+interface ThingProperty2 {
+}
+interface ThingAction2 {
+}
+interface ThingEvent2 {
+}
+
 @suite("TD parsing/serialising")
 class TDParserTest {
 
@@ -397,6 +515,28 @@ class TDParserTest {
     // serialize
     let newJson = TDParser.serializeTD(td);
     console.log(newJson);
+  }
+
+
+
+  @test "simplified TD 1"() {
+    let td: Thing2 = JSON.parse(tdSimple1);
+
+    // simple elements
+    expect(td).to.have.property("@context").that.equals("https://w3c.github.io/wot/w3c-wot-td-context.jsonld");
+    expect(td["@context"]).equals("https://w3c.github.io/wot/w3c-wot-td-context.jsonld");
+    expect(td.id).equals("urn:dev:wot:com:example:servient:lamp");
+    expect(td.name).equals("MyLampThing");
+
+    // interaction arrays
+    expect(td).to.have.property("properties");
+    expect(td).to.have.property("actions");
+    expect(td).to.have.property("events");
+
+    // console.log(td["@context"]);
+    expect(td.properties).to.have.property("status");
+    expect(td.properties["status"].writable).equals(false);
+    expect(td.properties["status"].observable).equals(false);
   }
 
 }
