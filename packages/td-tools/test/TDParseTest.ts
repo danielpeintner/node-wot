@@ -23,6 +23,7 @@ import { expect, should } from "chai";
 should();
 
 import Thing from "../src/thing-description";
+import {Thing2} from "../src/thing-description";
 import * as TDParser from "../src/td-parser";
 // import * as AddressHelper from "@node-wot/helpers";
 
@@ -242,92 +243,6 @@ let tdSimple1 = `{
       }}
 }`;
 
-
-
-interface Thing2 {
-  /** collection of string-based keys that reference values of any type */
-  readonly [ key: string ]: any; /* e.g., @context besides the one that are explitecly defined below */
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly base: string;
-
-  /** collection of string-based keys that reference a property of type Property2 */
-  readonly properties: {
-    [ key: string ]: Property2
-  };
-
-  /** collection of string-based keys that reference a property of type Action2 */
-  readonly actions: {
-    [ key: string ]: Action2;
-  }
-
-  /** collection of string-based keys that reference a property of type Event2 */
-  readonly events: {
-    [ key: string ]: Event2;
-  }
-  readonly securityDefinitions: Security2;
-}
-
-
-interface Interaction2 {
-  form: Array<Form2>;
-}
-
-interface Form2 {
-  href: string;
-  mediaType: string;
-  rel : string;
-  security: string; /* FIXME: what type */
-}
-
-interface Property2 extends Interaction2 {
-  writable: boolean;
-  observable: boolean;
-}
-
-interface Action2 extends Interaction2 {
-  /** TODO add definitions */
-}
-interface Event2 extends Interaction2 {
-  /** TODO add definitions */
-}
-
-interface Security2 {
-  readonly in: string;
-  readonly scheme: string;
-}
-
-
-
-/** A ThingTemplate is a dictionary that provides Thing related semantic metadata used for initializing a Thing Description */
-interface ThingTemplate2 {
-  /** collection of string-based keys that reference values of any type */
-  [ key: string ]: any;
-}
-
-
-interface ConsumedThing2 extends ThingTemplate2 {
-    /** collection of string-based keys that reference a property of type ThingProperty2 */
-    readonly properties: {
-      [ key: string ]: ThingProperty2;
-    }
-    /** collection of string-based keys that reference a property of type ThingProperty2 */
-    readonly actions: {
-      [ key: string ]: ThingAction2;
-    }
-    /** collection of string-based keys that reference a property of type ThingProperty2 */
-    readonly events: {
-      [ key: string ]: ThingEvent2;
-    }
-}
-
-interface ThingProperty2 {
-}
-interface ThingAction2 {
-}
-interface ThingEvent2 {
-}
 
 @suite("TD parsing/serialising")
 class TDParserTest {

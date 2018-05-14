@@ -186,3 +186,62 @@ export default class Thing {
     this.link = []
   }
 }
+
+
+
+
+
+export interface Thing2 {
+  /** collection of string-based keys that reference values of any type */
+  readonly [ key: string ]: any; /* e.g., @context besides the one that are explitecly defined below */
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly base: string;
+
+  /** collection of string-based keys that reference a property of type Property2 */
+  readonly properties: {
+    [ key: string ]: Property2
+  };
+
+  /** collection of string-based keys that reference a property of type Action2 */
+  readonly actions: {
+    [ key: string ]: Action2;
+  }
+
+  /** collection of string-based keys that reference a property of type Event2 */
+  readonly events: {
+    [ key: string ]: Event2;
+  }
+  readonly securityDefinitions: Security2;
+}
+
+
+
+export interface Interaction2 {
+  form: Array<Form2>;
+}
+
+export interface Form2 {
+  href: string;
+  mediaType: string;
+  rel : string;
+  security: string; /* FIXME: what type */
+}
+
+export interface Property2 extends Interaction2 {
+  writable: boolean;
+  observable: boolean;
+}
+
+export interface Action2 extends Interaction2 {
+  /** TODO add definitions */
+}
+export interface Event2 extends Interaction2 {
+  /** TODO add definitions */
+}
+
+export interface Security2 {
+  readonly in: string;
+  readonly scheme: string;
+}

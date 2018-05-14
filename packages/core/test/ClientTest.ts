@@ -25,9 +25,11 @@ import { expect, should } from "chai";
 // should must be called to augment all variables
 should();
 
-import { InteractionForm } from "@node-wot/td-tools";
+import { InteractionForm, Thing2 } from "@node-wot/td-tools";
 import Servient from "../src/servient";
 import { ProtocolClient, ProtocolClientFactory, Content } from "../src/resource-listeners/protocol-interfaces"
+import ConsumedThing from "../src/consumed-thing";
+import {ConsumedThing2, ConsumedThing2Impl} from "../src/consumed-thing";
 
 class TDDataClient implements ProtocolClient {
 
@@ -304,5 +306,45 @@ class WoTClientTest {
                 done();
             })
             .catch(err => { done(err) });
+    }
+
+    @test "newTD 1"() {
+        let tdSimple1 = `{
+            "@context": "https://w3c.github.io/wot/w3c-wot-td-context.jsonld",
+            "id": "urn:dev:wot:com:example:servient:lamp",
+            "name": "MyLampThing",
+            "properties": {
+                "status": {
+                 "writable": false,
+                 "observable": false,
+                 "type": "string",
+                 "form": [{
+                     "href": "coaps://mylamp.example.com:5683/status",
+                     "mediaType": "application/json"
+                 }]
+            }},
+            "actions": {
+             "toggle": {
+                "form": [{
+                    "href": "coaps://mylamp.example.com:5683/toggle",
+                    "mediaType": "application/json"
+                }]}},
+            "events": {
+                "overheating": {
+                    "type": "string",
+                    "form": [{
+                        "href": "coaps://mylamp.example.com:5683/oh",
+                        "mediaType": "application/json"
+                    }]
+                }}
+          }`;
+        
+        let td2: Thing2 = JSON.parse(tdSimple1);
+
+        let ct2 = new ConsumedThing2Impl(td2);
+
+        let tp2 = ct2.properties["status"]; // ThingProperty2 
+        console.log(tp2)
+
     }
 }

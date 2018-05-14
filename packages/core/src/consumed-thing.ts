@@ -64,7 +64,7 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
         this.semanticType = tdObj.semanticType;
         this.name = tdObj.name;
         this.id = tdObj.id;
-        if (Array.isArray(tdObj.security) && tdObj.security.length>=1) {
+        if (Array.isArray(tdObj.security) && tdObj.security.length >= 1) {
             if (tdObj.security.length > 1) {
                 console.warn(`ConsumedThing '${this.name}' received multiple security metadata entries, selecting first`)
             }
@@ -148,7 +148,7 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
                         let value = ContentSerdes.contentToValue(content);
                         resolve(value);
                     })
-                    .catch(err => { console.log("Failed to read because " + err); });
+                        .catch(err => { console.log("Failed to read because " + err); });
                 }
             }
         });
@@ -233,4 +233,68 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
         return this.observablesTDChange.asObservable();
     }
 
+}
+
+
+
+
+/** A ThingTemplate is a dictionary that provides Thing related semantic metadata used for initializing a Thing Description */
+export interface ThingTemplate2 {
+    /** collection of string-based keys that reference values of any type */
+    [key: string]: any;
+}
+
+
+export interface ConsumedThing2 extends ThingTemplate2 { // , Observable<any>
+    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    readonly properties: {
+        [key: string]: ThingProperty2;
+    }
+    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    readonly actions: {
+        [key: string]: ThingAction2;
+    }
+    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    readonly events: {
+        [key: string]: ThingEvent2;
+    }
+}
+
+
+export interface Interaction2 {
+
+}
+
+export interface ThingProperty2 extends Interaction2 {
+}
+export interface ThingAction2 extends Interaction2 {
+}
+export interface ThingEvent2 extends Interaction2 {
+}
+
+
+export class ConsumedThing2Impl implements ConsumedThing2 {
+    properties: {
+        [key: string]: ThingProperty2;
+    } = {};
+    actions: {
+        [key: string]: ThingAction2;
+    } = {};
+    events: {
+        [key: string]: ThingEvent2;
+    } = {};
+
+    constructor(thing: TD.Thing2) {
+        for (let propName in thing.properties) {
+            let value = thing.properties[propName];
+            this.properties[propName] = null;
+            // TODO add actual values/code
+            // Use `key` and `value`
+        }
+
+        let d: TD.Property2;
+        // for(TD.Property2 p2 : thing.properties) {
+
+        // } ;
+    }
 }
