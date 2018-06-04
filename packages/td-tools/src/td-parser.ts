@@ -16,14 +16,29 @@
 import Thing from './thing-description';
 import * as TD from './thing-description';
 
-// import {plainToClass, classToPlain} from "class-transformer";
-import "reflect-metadata";
-
-
 function stringToThingDescription(tdJson: string): Thing {
-  let tdPlain = JSON.parse(tdJson);
-  let td: Thing = new Thing();
+  let td: Thing = JSON.parse(tdJson);
 
+  // let tdPlain = JSON.parse(tdJson);
+  // let td: Thing = new Thing();
+
+  // TODO "sanitize" Thing class
+  if(td["@context"] == undefined ) {
+    td["@context"] = TD.DEFAULT_HTTPS_CONTEXT;
+  }
+  if(td.properties != undefined && td.properties instanceof Object) {
+    for(var propName in td.properties) {
+      let prop = td.properties[propName];
+      if(prop.writable == undefined) { // } || prop.writable instanceof Boolean) {
+        prop.writable = false;
+      }
+      if(prop.observable == undefined) { // } || prop.observable instanceof Boolean) {
+        prop.observable = false;
+      }
+    }
+  }
+
+  /*
   for (var fieldNameRoot in tdPlain) {
     if (tdPlain.hasOwnProperty(fieldNameRoot)) {
       switch (fieldNameRoot) {
@@ -153,7 +168,7 @@ function stringToThingDescription(tdJson: string): Thing {
                           console.error("observable field of interaction not of type boolean");
                         }
                         break;
-                      case "link": /* link replaced by form */
+                      case "link": // link replaced by form
                       case "form":
                         // InteractionForm
                         if (Array.isArray(interactionEntry[fieldNameInteraction])) {
@@ -234,11 +249,15 @@ function stringToThingDescription(tdJson: string): Thing {
       }
     }
   }
+  */
 
   return td;
 }
 
 function thingDescriptionToString(td: Thing): string {
+  return JSON.stringify(td);
+
+  /*
   let json: any = {};
 
   // @context
@@ -348,6 +367,7 @@ function thingDescriptionToString(td: Thing): string {
   }
 
   return JSON.stringify(json);
+  */
 }
 
 export function parseTDString(json: string, normalize?: boolean): Thing {
@@ -356,6 +376,11 @@ export function parseTDString(json: string, normalize?: boolean): Thing {
 
   if (td.security) console.log(`parseTDString() found security metadata`);
 
+  // TODO normalize normalize each Interaction link
+
+  return td;
+
+  /*
   console.debug(`parseTDString() found ${td.interaction.length} Interaction${td.interaction.length === 1 ? '' : 's'}`);
   // for each interaction assign the Interaction type (Property, Action, Event)
   // and, if "base" is given, normalize each Interaction link
@@ -382,7 +407,7 @@ export function parseTDString(json: string, normalize?: boolean): Thing {
     }
 
     if (normalize == null || normalize) {
-      /* if a base uri is used normalize all relative hrefs in links */
+      // if a base uri is used normalize all relative hrefs in links
       if (td.base !== undefined) {
 
         let url = require('url');
@@ -392,8 +417,8 @@ export function parseTDString(json: string, normalize?: boolean): Thing {
 
           let href: string = form.href;
 
-          /* url modul works only for http --> so replace any protocol to
-             http and after resolving replace orign protocol back */
+          // url modul works only for http --> so replace any protocol to
+          //    http and after resolving replace orign protocol back
           let n: number = td.base.indexOf(':');
           let scheme: string = td.base.substr(0, n + 1); // save origin protocol
           let uriTemp: string = td.base.replace(scheme, 'http:'); // replace protocol
@@ -406,6 +431,7 @@ export function parseTDString(json: string, normalize?: boolean): Thing {
   }
 
   return td;
+  */
 }
 
 export function serializeTD(td: Thing): string {

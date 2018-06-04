@@ -16,232 +16,91 @@
 // global W3C WoT Scripting API definitions
 import WoT from "wot-typescript-definitions";
 
-import "reflect-metadata";
+export const DEFAULT_HTTP_CONTEXT: string = "http://w3c.github.io/wot/w3c-wot-td-context.jsonld";
+export const DEFAULT_HTTPS_CONTEXT: string = "https://w3c.github.io/wot/w3c-wot-td-context.jsonld";
+export const DEFAULT_THING_TYPE: string = "Thing";
 
-/** Internet Media Types */
-/*export enum MediaType {
-    JSON = <any>"application/json",
-    XML = <any>"application/xml",
-    EXI = <any>"application/exi"
-
-} */
-
-export const DEFAULT_HTTP_CONTEXT : string = "http://w3c.github.io/wot/w3c-wot-td-context.jsonld" ;
-export const DEFAULT_HTTPS_CONTEXT : string = "https://w3c.github.io/wot/w3c-wot-td-context.jsonld";
-export const DEFAULT_THING_TYPE : string = "Thing";
-
-/** Interaction pattern */
-export enum InteractionPattern {
-  Property = 'Property' as any,
-  Action = 'Action' as any,
-  Event = 'Event' as any
-}
+/* TODOs / Questions
+ ~ In Thing index structure could be read-only (sanitizing needs write access)
+*/
 
 /**
- * node-wot definition for security metadata
+ * node-wot definition for instantiated Thing Descriptions (Things)
  */
-export class ThingSecurity {
-  public mode: string;
+export default class Thing {
+  /** collection of string-based keys that reference values of any type */
+  // readonly
+  [key: string]: any; /* e.g., @context besides the one that are explitecly defined below */
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly base?: string;
 
-  public proxy: string;
-}
+  /** collection of string-based keys that reference a property of type Property2 */
+  readonly properties: {
+    [key: string]: Property
+  };
 
-/**
- * node-wot definition for form / binding metadata
- */
-export class InteractionForm {
+  /** collection of string-based keys that reference a property of type Action2 */
+  readonly actions: {
+    [key: string]: Action;
+  }
 
-  /** relativ or absulut URI path of the Interaction resource */
-  public href: string;
+  /** collection of string-based keys that reference a property of type Event2 */
+  readonly events: {
+    [key: string]: Event;
+  }
+  readonly securityDefinitions: Security;
 
-  /** used mediaType of the interacion resources */
-  public mediaType?: string;
+  /** Web links to other Things or metadata */
+  public link?: Array<any>;
 
-  constructor(href?: string, mediaType?: string) {
-    if (href) this.href = href;
-    if (mediaType) this.mediaType = mediaType;
+  constructor() {
+    // this.context = [DEFAULT_HTTPS_CONTEXT];
+    // this.semanticType = []; // DEFAULT_THING_TYPE
+    // this.metadata = [];
+    // this.interaction = [];
+    // this.link = []
   }
 }
 
 /**
  * node-wot definition for Interactions
  */
-export class Interaction {
-  /** @ type information of the Interaction */
-  /* TODO Should be public semanticType: Array<WoT.SemanticType>; */
-  public semanticType: Array<string>;
-
-  public metadata: Array<WoT.SemanticMetadata>;
-
-  /** name/identifier of the Interaction */
-  public name: string;
-
-  /** type of the Interaction (action, property, event) */
-  public pattern: InteractionPattern;
-
-  /** form information of the Interaction resources */
-  public form: Array<InteractionForm>;
-
-  /** writable flag for the Property */
-  public writable: boolean;
-
-  /** observable flag for the Property */
-  public observable: boolean;
-
-  /** Property/Event schema */
-  public schema: any;
-  /** Action input schema */
-  public inputSchema: any;
-  /** Action output schema */
-  public outputSchema: any;
-
-  constructor() {
-    this.semanticType = [];
-    this.metadata = [];
-    this.form = [];
-  }
+export interface Interaction {
+  form: Array<Form>;
 }
 
-export class PrefixedContext {
-  public prefix: string;
-  public context: string;
 
-  constructor(prefix: string, context: string) {
-    this.prefix = prefix;
-    this.context = context;
-  }
-}
+
 
 /**
- * node-wot definition for instantiated Thing Descriptions (Things)
+ * node-wot definition for form / binding metadata
  */
-export default class Thing {
-
-  /** @context information of the TD */
-  public context: Array<string | object>
-
-  /** @ type information, usually 'Thing' */
-  public semanticType: Array<WoT.SemanticType>;
-
-  /** container for all custom metadata */
-  public metadata: Array<WoT.SemanticMetadata>;
-
-  /** human-readable name of the Thing */
-  public name: string;
-
-  /** unique identifier (a URI, includes URN) */
-  public id: string;
-
-  /** security metadata */
-  public security: Object;
-
-  /** base URI of the Interaction resources */
-  public base?: string;
-
-  /** Interactions of this Thing */
-  public interaction: Array<Interaction>;
-
-  /** Web links to other Things or metadata */
-  public link?: Array<any>;
-
-  /*
-  public getSimpleContexts(): Array<string> {
-    // @DAPE: Shall we cache created list?
-    let contexts: Array<string> = [];
-    if (this.context != null) {
-      for (let cnt of this.context) {
-        if (typeof cnt == "string") {
-          let c: string = cnt as string;
-          contexts.push(c);
-        }
-      }
-    }
-    return contexts;
-  }
-
-  public getPrefixedContexts(): Array<PrefixedContext> {
-    // @DAPE: Shall we cache created list?
-    let contexts: Array<PrefixedContext> = [];
-    if (this.context != null) {
-      for (let cnt of this.context) {
-        if (typeof cnt == "object") {
-          let c: any = cnt as any;
-          let keys = Object.keys(c);
-          for (let pfx of keys) {
-            let v = c[pfx];
-            contexts.push(new PrefixedContext(pfx, v));
-          }
-        }
-      }
-    }
-    return contexts;
-  }
-  */
-
-  constructor() {
-    this.context = [DEFAULT_HTTPS_CONTEXT];
-    this.semanticType = []; // DEFAULT_THING_TYPE
-    this.metadata = [];
-    this.interaction = [];
-    this.link = []
-  }
-}
-
-
-
-
-
-export interface Thing2 {
-  /** collection of string-based keys that reference values of any type */
-  readonly [ key: string ]: any; /* e.g., @context besides the one that are explitecly defined below */
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly base: string;
-
-  /** collection of string-based keys that reference a property of type Property2 */
-  readonly properties: {
-    [ key: string ]: Property2
-  };
-
-  /** collection of string-based keys that reference a property of type Action2 */
-  readonly actions: {
-    [ key: string ]: Action2;
-  }
-
-  /** collection of string-based keys that reference a property of type Event2 */
-  readonly events: {
-    [ key: string ]: Event2;
-  }
-  readonly securityDefinitions: Security2;
-}
-
-
-
-export interface Interaction2 {
-  form: Array<Form2>;
-}
-
-export interface Form2 {
+export interface Form {
   href: string;
   mediaType: string;
-  rel : string;
+  rel: string;
   security: string; /* FIXME: what type */
 }
 
-export interface Property2 extends Interaction2 {
+export interface Property extends Interaction {
   writable: boolean;
   observable: boolean;
 }
 
-export interface Action2 extends Interaction2 {
+export interface Action extends Interaction {
   /** TODO add definitions */
 }
-export interface Event2 extends Interaction2 {
+export interface Event extends Interaction {
   /** TODO add definitions */
 }
 
-export interface Security2 {
+
+/**
+ * node-wot definition for security metadata
+ */
+export interface Security {
   readonly in: string;
   readonly scheme: string;
 }
