@@ -29,10 +29,10 @@ import { Subject } from 'rxjs/Subject';
 
 interface ClientAndForm {
     client: ProtocolClient
-    form: TD.InteractionForm
+    form: TD.Form
 }
 
-export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
+export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThing {
 
     protected readonly td: WoT.ThingDescription;
 
@@ -52,7 +52,7 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
     protected observablesTDChange: Subject<any> = new Subject<any>();
 
     constructor(servient: Servient, td: WoT.ThingDescription) {
-
+        super();
         this.srv = servient;
         // cache original TD
         this.td = td;
@@ -86,7 +86,7 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
     }
 
     // lazy singleton for ProtocolClient per scheme
-    private getClientFor(forms: TD.InteractionForm[]): ClientAndForm {
+    private getClientFor(forms: TD.Form[]): ClientAndForm {
         if (forms.length === 0) {
             throw new Error("ConsumedThing '${this.name}' has no links for this interaction");
         }
@@ -122,10 +122,12 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
         }
     }
 
+    /*
     private findInteraction(name: string, type: TD.InteractionPattern) {
         let res = this.interaction.filter((ia) => ia.pattern === type && ia.name === name)
         return (res.length > 0) ? res[0] : null;
     }
+    */
 
     /**
      * Read a given property
@@ -133,7 +135,8 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
      */
     readProperty(propertyName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let property = this.findInteraction(propertyName, TD.InteractionPattern.Property);
+            let property = this.properties[propertyName];
+            // let property = this.findInteraction(propertyName, TD.InteractionPattern.Property);
             if (!property) {
                 reject(new Error(`ConsumedThing '${this.name}' cannot find Property '${propertyName}'`));
             } else {
@@ -161,7 +164,8 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
      */
     writeProperty(propertyName: string, newValue: any): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let property = this.findInteraction(propertyName, TD.InteractionPattern.Property);
+            let property = this.properties[propertyName];
+            // let property = this.findInteraction(propertyName, TD.InteractionPattern.Property);
             if (!property) {
                 reject(new Error(`ConsumedThing '${this.name}' cannot find Property '${propertyName}'`));
             } else {
@@ -196,7 +200,8 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
     */
     invokeAction(actionName: string, parameter?: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let action = this.findInteraction(actionName, TD.InteractionPattern.Action);
+            let action = this.properties[actionName];
+            // let action = this.findInteraction(actionName, TD.InteractionPattern.Action);
             if (!action) {
                 reject(new Error(`ConsumedThing '${this.name}' cannot find Action '${actionName}'`));
             } else {
@@ -284,7 +289,7 @@ export class ConsumedThing2Impl implements ConsumedThing2 {
         [key: string]: ThingEvent2;
     } = {};
 
-    constructor(thing: TD.Thing2) {
+    constructor(thing: TD.Thing) {
         for (let propName in thing.properties) {
             let value = thing.properties[propName];
             this.properties[propName] = null;
@@ -292,7 +297,7 @@ export class ConsumedThing2Impl implements ConsumedThing2 {
             // Use `key` and `value`
         }
 
-        let d: TD.Property2;
+        let d: TD.Property;
         // for(TD.Property2 p2 : thing.properties) {
 
         // } ;

@@ -31,26 +31,34 @@ export default class Thing {
   /** collection of string-based keys that reference values of any type */
   // readonly
   [key: string]: any; /* e.g., @context besides the one that are explitecly defined below */
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly base?: string;
+  // readonly 
+  id: string;
+  // readonly
+  name: string;
+  // readonly
+  description: string;
+  // readonly
+  base?: string;
 
   /** collection of string-based keys that reference a property of type Property2 */
-  readonly properties: {
+  // readonly
+  properties: {
     [key: string]: Property
   };
 
   /** collection of string-based keys that reference a property of type Action2 */
-  readonly actions: {
+  // readonly
+  actions: {
     [key: string]: Action;
   }
 
   /** collection of string-based keys that reference a property of type Event2 */
-  readonly events: {
+  // readonly
+  events: {
     [key: string]: Event;
   }
-  readonly securityDefinitions: Security;
+  // readonly
+  securityDefinitions: Security;
 
   /** Web links to other Things or metadata */
   public link?: Array<any>;
@@ -67,7 +75,8 @@ export default class Thing {
 /**
  * node-wot definition for Interactions
  */
-export interface Interaction {
+export class Interaction {
+  name: string;
   form: Array<Form>;
 }
 
@@ -77,30 +86,35 @@ export interface Interaction {
 /**
  * node-wot definition for form / binding metadata
  */
-export interface Form {
+export class Form {
   href: string;
   mediaType: string;
   rel: string;
   security: string; /* FIXME: what type */
 }
 
-export interface Property extends Interaction {
+export class Property extends Interaction {
   writable: boolean;
   observable: boolean;
+
+  schema: string;
 }
 
-export interface Action extends Interaction {
+export class Action extends Interaction {
   /** TODO add definitions */
+  inputSchema: string;
+  outputSchema: string;
 }
-export interface Event extends Interaction {
+export class Event extends Interaction {
   /** TODO add definitions */
+  schema: string;
 }
 
 
 /**
  * node-wot definition for security metadata
  */
-export interface Security {
+export class Security {
   readonly in: string;
   readonly scheme: string;
 }

@@ -41,6 +41,9 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
             // reset forms in case already set via ThingModel
             inter.form = [];
 
+            
+            console.log("TODO: set states and add resource handlers");
+            /*
             if (inter.pattern === TD.InteractionPattern.Property) {
                 this.propertyStates.set(inter.name, new PropertyState());
                 this.addResourceListener("/" + this.name + "/properties/" + inter.name, new Rest.PropertyResourceListener(this, inter.name));
@@ -52,6 +55,7 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
             } else {
                 console.error(`ExposedThing '${this.name}' ignoring unknown Interaction '${inter.name}':`, inter);
             }
+            */
         }
 
         // expose Thing
@@ -188,9 +192,7 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
 
         console.log(`ExposedThing '${this.name}' adding Property '${property.name}'`);
 
-        // new way
-        let newProp = new TD.Interaction();
-        newProp.pattern = TD.InteractionPattern.Property;
+        let newProp = new TD.Property();
 
         newProp.name = property.name;
         newProp.writable = property.writable;
@@ -223,9 +225,7 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
 
         console.log(`ExposedThing '${this.name}' adding Action '${action.name}'`);
 
-        // new way
-        let newAction = new TD.Interaction();
-        newAction.pattern = TD.InteractionPattern.Action;
+        let newAction = new TD.Action();
 
         newAction.name = action.name;
         newAction.inputSchema = action.inputSchema ? JSON.parse(action.inputSchema) : null;
@@ -251,8 +251,7 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
      */
     addEvent(event: WoT.ThingEvent): WoT.ExposedThing {
         // eventName: string
-        let newEvent = new TD.Interaction();
-        newEvent.pattern = TD.InteractionPattern.Event;
+        let newEvent = new TD.Event();
         newEvent.name = event.name;
         newEvent.schema = JSON.parse(event.schema);
 
