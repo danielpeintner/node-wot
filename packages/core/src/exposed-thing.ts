@@ -25,7 +25,9 @@ import * as Rest from "./resource-listeners/all-resource-listeners";
 import { ResourceListener } from "./resource-listeners/protocol-interfaces";
 import { Content, ContentSerdes } from "./content-serdes";
 
-export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT.ConsumedThing, WoT.ExposedThing {
+export default class ExposedThing extends ConsumedThing implements
+ // TD.Thing, 
+ WoT.ConsumedThing, WoT.ExposedThing {
     private propertyStates: Map<string, PropertyState> = new Map<string, PropertyState>();
     private actionStates: Map<string, ActionState> = new Map<string, ActionState>();
     private interactionObservables: Map<string, Subject<Content>> = new Map<string, Subject<Content>>();
@@ -36,14 +38,27 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
         super(servient, td);
 
         // create state for all initial Interactions
+        for (let propertyName in this.thing.properties) {
+            let property = this.thing.properties[propertyName];
+            this.propertyStates.set(propertyName, new PropertyState());
+            this.addResourceListener("/" + this.name + "/properties/" + propertyName, new Rest.PropertyResourceListener(this, propertyName));
+        }
+        for (let actionName in this.thing.actions) {
+            let action = this.thing.actions[actionName];
+            this.actionStates.set(actionName, new ActionState());
+            this.addResourceListener("/" + this.name + "/actions/" + actionName, new Rest.PropertyResourceListener(this, actionName));
+        }
+        for (let eventName in this.thing.events) {
+            let event = this.thing.events[eventName];
+            // TODO connection to bindings
+        }
+
+        /*
         for (let inter of this.interaction) {
 
             // reset forms in case already set via ThingModel
             inter.form = [];
 
-            
-            console.log("TODO: set states and add resource handlers");
-            /*
             if (inter.pattern === TD.InteractionPattern.Property) {
                 this.propertyStates.set(inter.name, new PropertyState());
                 this.addResourceListener("/" + this.name + "/properties/" + inter.name, new Rest.PropertyResourceListener(this, inter.name));
@@ -54,9 +69,9 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
                 // TODO connection to bindings
             } else {
                 console.error(`ExposedThing '${this.name}' ignoring unknown Interaction '${inter.name}':`, inter);
-            }
-            */
+            }  
         }
+        */
 
         // expose Thing
         this.addResourceListener("/" + this.name, new Rest.TDResourceListener(this));
@@ -76,10 +91,12 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
         this.srv.removeResourceListener(path);
     }
 
+    /*
     public getInteractions(): Array<TD.Interaction> {
         // returns a copy -- FIXME: not a deep copy
         return this.interaction.slice(0);
     }
+    */
 
     /**
      * Read a given property
@@ -203,7 +220,7 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
         //action.semanticType
         //action.metadata
 
-        this.interaction.push(newProp);
+        this.thing.properties[property.name] = newProp;
 
         // FIXME does it makes sense to push the state to the ResourceListener?
         let state = new PropertyState();
@@ -235,7 +252,7 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
         //action.semanticType
         //action.metadata
 
-        this.interaction.push(newAction);
+        this.thing.actions[action.name] = newAction;
 
         this.actionStates.set(newAction.name, new ActionState());
         this.addResourceListener("/" + this.name + "/actions/" + newAction.name, new Rest.ActionResourceListener(this, newAction.name));
@@ -255,7 +272,8 @@ export default class ExposedThing extends ConsumedThing implements TD.Thing, WoT
         newEvent.name = event.name;
         newEvent.schema = JSON.parse(event.schema);
 
-        this.interaction.push(newEvent);
+        this.thing.events[event.name] = newEvent;
+
 
         let subject = new Subject<Content>();
 

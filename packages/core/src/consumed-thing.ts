@@ -32,10 +32,25 @@ interface ClientAndForm {
     form: TD.Form
 }
 
-export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThing {
+export default class ConsumedThing
+// extends TD.Thing
+implements  WoT.ConsumedThing {
 
     protected readonly td: WoT.ThingDescription;
-
+    protected thing: TD.Thing;
+    public readonly name: string;
+    public readonly id: string;
+    public readonly properties: {
+        [key: string]: TD.Property;
+    };
+    public readonly actions: {
+        [key: string]: TD.Action;
+    };
+    public readonly events: {
+        [key: string]: TD.Event;
+    };
+    public readonly link: Array<any>;
+    /*
     public readonly context: (string | Object)[];
     public readonly name: string;
     public readonly id: string;
@@ -44,6 +59,7 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
     public readonly security: any;
     public readonly interaction: TD.Interaction[];
     public readonly link: Array<any>;
+    */
 
     protected readonly srv: Servient;
     private clients: Map<string, ProtocolClient> = new Map();
@@ -52,12 +68,27 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
     protected observablesTDChange: Subject<any> = new Subject<any>();
 
     constructor(servient: Servient, td: WoT.ThingDescription) {
-        super();
+        // super();
         this.srv = servient;
         // cache original TD
         this.td = td;
 
         // apply TD to Thing with normalized URIs (base resolved)
+        this.thing = TD.parseTDString(td, true);
+        console.log("Properties #: " + Object.keys(this.thing.properties).length);
+        console.log("Actions    #: " + Object.keys(this.thing.actions).length);
+        console.log("Events     #: " + Object.keys(this.thing.events).length);
+        
+        this.name = this.thing.name;
+        this.id = this.thing.id;
+        this.properties = this.thing.properties;
+        this.actions = this.thing.actions;
+        this.events = this.thing.events;
+        // TODO security
+        // TODO metadata
+        this.link = this.thing.link;
+
+        /*
         let tdObj = TD.parseTDString(td, true);
 
         this.context = tdObj.context;
@@ -75,6 +106,7 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
         this.metadata = tdObj.metadata;
         this.interaction = tdObj.interaction;
         this.link = tdObj.link;
+        */
     }
 
     /**
@@ -96,28 +128,28 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
 
         if (cacheIdx !== -1) {
             // from cache
-            console.debug(`ConsumedThing '${this.name}' chose cached client for '${schemes[cacheIdx]}'`);
+            console.debug(`ConsumedThing '${this.thing.name}' chose cached client for '${schemes[cacheIdx]}'`);
             let client = this.clients.get(schemes[cacheIdx]);
             let form = forms[cacheIdx];
             return { client: client, form: form };
         } else {
             // new client
-            console.debug(`ConsumedThing '${this.name}' has no client in cache (${cacheIdx})`);
+            console.debug(`ConsumedThing '${this.thing.name}' has no client in cache (${cacheIdx})`);
             let srvIdx = schemes.findIndex(scheme => this.srv.hasClientFor(scheme));
-            if (srvIdx === -1) throw new Error(`ConsumedThing '${this.name}' missing ClientFactory for '${schemes}'`);
+            if (srvIdx === -1) throw new Error(`ConsumedThing '${this.thing.name}' missing ClientFactory for '${schemes}'`);
             let client = this.srv.getClientFor(schemes[srvIdx]);
             if (client) {
-                console.log(`ConsumedThing '${this.name}' got new client for '${schemes[srvIdx]}'`);
-                if (this.security) {
+                console.log(`ConsumedThing '${this.thing.name}' got new client for '${schemes[srvIdx]}'`);
+                if (this.thing.security) {
                     console.warn("ConsumedThing applying security metadata");
                     //console.dir(this.security);
-                    client.setSecurity(this.security, this.srv.getCredentials(this.id));
+                    client.setSecurity(this.thing.security, this.srv.getCredentials(this.thing.id));
                 }
                 this.clients.set(schemes[srvIdx], client);
                 let form = forms[srvIdx];
                 return { client: client, form: form }
             } else {
-                throw new Error(`ConsumedThing '${this.name}' could not get client for '${schemes[srvIdx]}'`);
+                throw new Error(`ConsumedThing '${this.thing.name}' could not get client for '${schemes[srvIdx]}'`);
             }
         }
     }
@@ -135,16 +167,16 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
      */
     readProperty(propertyName: string): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let property = this.properties[propertyName];
+            let property = this.thing.properties[propertyName];
             // let property = this.findInteraction(propertyName, TD.InteractionPattern.Property);
             if (!property) {
-                reject(new Error(`ConsumedThing '${this.name}' cannot find Property '${propertyName}'`));
+                reject(new Error(`ConsumedThing '${this.thing.name}' cannot find Property '${propertyName}'`));
             } else {
                 let { client, form } = this.getClientFor(property.form);
                 if (!client) {
-                    reject(new Error(`ConsumedThing '${this.name}' did not get suitable client for ${form.href}`));
+                    reject(new Error(`ConsumedThing '${this.thing.name}' did not get suitable client for ${form.href}`));
                 } else {
-                    console.log(`ConsumedThing '${this.name}' reading ${form.href}`);
+                    console.log(`ConsumedThing '${this.thing.name}' reading ${form.href}`);
                     client.readResource(form).then((content) => {
                         if (!content.mediaType) content.mediaType = form.mediaType;
                         //console.log(`ConsumedThing decoding '${content.mediaType}' in readProperty`);
@@ -164,16 +196,16 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
      */
     writeProperty(propertyName: string, newValue: any): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let property = this.properties[propertyName];
+            let property = this.thing.properties[propertyName];
             // let property = this.findInteraction(propertyName, TD.InteractionPattern.Property);
             if (!property) {
-                reject(new Error(`ConsumedThing '${this.name}' cannot find Property '${propertyName}'`));
+                reject(new Error(`ConsumedThing '${this.thing.name}' cannot find Property '${propertyName}'`));
             } else {
                 let { client, form } = this.getClientFor(property.form);
                 if (!client) {
-                    reject(new Error(`ConsumedThing '${this.name}' did not get suitable client for ${form.href}`));
+                    reject(new Error(`ConsumedThing '${this.thing.name}' did not get suitable client for ${form.href}`));
                 } else {
-                    console.log(`ConsumedThing '${this.name}' writing ${form.href} with '${newValue}'`);
+                    console.log(`ConsumedThing '${this.thing.name}' writing ${form.href} with '${newValue}'`);
                     let content = ContentSerdes.valueToContent(newValue, form.mediaType)
                     resolve(client.writeResource(form, content));
 
@@ -200,16 +232,16 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
     */
     invokeAction(actionName: string, parameter?: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let action = this.properties[actionName];
+            let action = this.thing.actions[actionName];
             // let action = this.findInteraction(actionName, TD.InteractionPattern.Action);
             if (!action) {
-                reject(new Error(`ConsumedThing '${this.name}' cannot find Action '${actionName}'`));
+                reject(new Error(`ConsumedThing '${this.thing.name}' cannot find Action '${actionName}'`));
             } else {
                 let { client, form } = this.getClientFor(action.form);
                 if (!client) {
-                    reject(new Error(`ConsumedThing '${this.name}' did not get suitable client for ${form.href}`));
+                    reject(new Error(`ConsumedThing '${this.thing.name}' did not get suitable client for ${form.href}`));
                 } else {
-                    console.log(`ConsumedThing '${this.name}' invoking ${form.href} with '${parameter}'`);
+                    console.log(`ConsumedThing '${this.thing.name}' invoking ${form.href} with '${parameter}'`);
 
                     let mediaType = form.mediaType;
                     let input = ContentSerdes.valueToContent(parameter, form.mediaType);
@@ -242,24 +274,24 @@ export default class ConsumedThing extends TD.Thing implements  WoT.ConsumedThin
 
 
 
-
-/** A ThingTemplate is a dictionary that provides Thing related semantic metadata used for initializing a Thing Description */
+/*
+// A ThingTemplate is a dictionary that provides Thing related semantic metadata used for initializing a Thing Description
 export interface ThingTemplate2 {
-    /** collection of string-based keys that reference values of any type */
+    // collection of string-based keys that reference values of any type
     [key: string]: any;
 }
 
 
 export interface ConsumedThing2 extends ThingTemplate2 { // , Observable<any>
-    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    // collection of string-based keys that reference a property of type ThingProperty2
     readonly properties: {
         [key: string]: ThingProperty2;
     }
-    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    // collection of string-based keys that reference a property of type ThingProperty2
     readonly actions: {
         [key: string]: ThingAction2;
     }
-    /** collection of string-based keys that reference a property of type ThingProperty2 */
+    // collection of string-based keys that reference a property of type ThingProperty2
     readonly events: {
         [key: string]: ThingEvent2;
     }
@@ -303,3 +335,4 @@ export class ConsumedThing2Impl implements ConsumedThing2 {
         // } ;
     }
 }
+*/

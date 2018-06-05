@@ -25,29 +25,28 @@ import { expect, should } from "chai";
 // should must be called to augment all variables
 should();
 
-import { InteractionForm, Thing2 } from "@node-wot/td-tools";
+import { Form, Thing } from "@node-wot/td-tools";
 import Servient from "../src/servient";
 import { ProtocolClient, ProtocolClientFactory, Content } from "../src/resource-listeners/protocol-interfaces"
 import ConsumedThing from "../src/consumed-thing";
-import {ConsumedThing2, ConsumedThing2Impl} from "../src/consumed-thing";
 
 class TDDataClient implements ProtocolClient {
 
-    public readResource(uri: InteractionForm): Promise<Content> {
+    public readResource(uri: Form): Promise<Content> {
         // Note: this is not a "real" DataClient! Instead it just reports the same TD in any case
         let c: Content = { mediaType: "application/json", body: new Buffer(JSON.stringify(myThingDesc)) };
         return Promise.resolve(c);
     }
 
-    public writeResource(uri: InteractionForm, content: Content): Promise<void> {
+    public writeResource(uri: Form, content: Content): Promise<void> {
         return Promise.reject("writeResource not implemented");
     }
 
-    public invokeResource(uri: InteractionForm, content: Content): Promise<Content> {
+    public invokeResource(uri: Form, content: Content): Promise<Content> {
         return Promise.reject("invokeResource not implemented");
     }
 
-    public unlinkResource(uri: InteractionForm): Promise<void> {
+    public unlinkResource(uri: Form): Promise<void> {
         return Promise.reject("unlinkResource not implemented");
     }
 
@@ -90,19 +89,19 @@ class TrapClient implements ProtocolClient {
         this.trap = callback
     }
 
-    public readResource(uri: InteractionForm): Promise<Content> {
+    public readResource(uri: Form): Promise<Content> {
         return Promise.resolve(this.trap(uri));
     }
 
-    public writeResource(uri: InteractionForm, content: Content): Promise<void> {
+    public writeResource(uri: Form, content: Content): Promise<void> {
         return Promise.resolve(this.trap(uri, content));
     }
 
-    public invokeResource(uri: InteractionForm, content: Content): Promise<Content> {
+    public invokeResource(uri: Form, content: Content): Promise<Content> {
         return Promise.resolve(this.trap(uri, content));
     }
 
-    public unlinkResource(uri: InteractionForm): Promise<void> {
+    public unlinkResource(uri: Form): Promise<void> {
         return Promise.resolve(this.trap(uri));
     }
 
@@ -143,27 +142,24 @@ let myThingDesc = {
     "@context": ["https://w3c.github.io/wot/w3c-wot-td-context.jsonld"],
     "@type": ["Thing"],
     "name": "aThing",
-    "interaction": [
-        {
-            "@type": ["Property"],
-            "name": "aProperty",
+    "properties": {
+        "aProperty":  {
             "schema": { "type": "number" },
             "writable": false,
             "form": [
                 { "href": "test://host/athing/properties/aproperty", "mediaType": "application/json" }
             ]
-        },
-        {
-            "@type": ["Action"],
-            "name": "anAction",
+        }
+    },
+    "actions": {
+        "anAction" : {
             "inputSchema": { "type": "number" },
             "outputSchema": { "type": "number" },
             "form": [
                 { "href": "test://host/athing/actions/anaction", "mediaType": "application/json" }
             ]
         }
-
-    ]
+    }
 }
 
 @suite("client flow of servient")
@@ -306,45 +302,5 @@ class WoTClientTest {
                 done();
             })
             .catch(err => { done(err) });
-    }
-
-    @test "newTD 1"() {
-        let tdSimple1 = `{
-            "@context": "https://w3c.github.io/wot/w3c-wot-td-context.jsonld",
-            "id": "urn:dev:wot:com:example:servient:lamp",
-            "name": "MyLampThing",
-            "properties": {
-                "status": {
-                 "writable": false,
-                 "observable": false,
-                 "type": "string",
-                 "form": [{
-                     "href": "coaps://mylamp.example.com:5683/status",
-                     "mediaType": "application/json"
-                 }]
-            }},
-            "actions": {
-             "toggle": {
-                "form": [{
-                    "href": "coaps://mylamp.example.com:5683/toggle",
-                    "mediaType": "application/json"
-                }]}},
-            "events": {
-                "overheating": {
-                    "type": "string",
-                    "form": [{
-                        "href": "coaps://mylamp.example.com:5683/oh",
-                        "mediaType": "application/json"
-                    }]
-                }}
-          }`;
-        
-        let td2: Thing2 = JSON.parse(tdSimple1);
-
-        let ct2 = new ConsumedThing2Impl(td2);
-
-        let tp2 = ct2.properties["status"]; // ThingProperty2 
-        console.log(tp2)
-
     }
 }

@@ -82,25 +82,23 @@ class WoTServerTest {
         expect(JSON.parse(thing.getThingDescription()).name).equal("myThing");
         expect(thing).to.have.property("name", "myThing");
     }
-
-
+    
+    
     @test "should be able to add a Thing given a TD"() {
         let desc = `{
             "@context": ["https://w3c.github.io/wot/w3c-wot-td-context.jsonld"],
             "@type": ["Thing"],
             "name": "myThingX",
-            "interaction": [
-                {
-                    "@type": ["Property"],
-                    "name": "myPropX"
+            "properties": {
+                "myPropX" : {
                 }
-            ]
+            }
         }`;
 
         let thing: WoT.ExposedThing = WoTServerTest.WoT.produce(desc);
         expect(thing).to.exist;
         expect(thing).to.have.property("name", "myThingX");
-        expect(thing).to.have.property("interaction");
+        expect(thing).to.have.property("properties");
     }
 
     @test async "should be able to add a property with default value 0"() {
@@ -364,16 +362,14 @@ class WoTServerTest {
             "@context": ["https://w3c.github.io/wot/w3c-wot-td-context.jsonld"],
             "@type": ["Thing"],
             "name": "thing6b",
-            "interaction": [
-                {
-                    "@type": ["Action"],
-                    "name": "action1",
+            "actions": {
+                "action1" : {
                     "inputSchema": { "type": "number" },
                     "outputSchema": { "type": "number" }
                 }
-            ]
+            }
         }`);
-        expect(thing).to.have.property("interaction");
+        expect(thing).to.have.property("actions");
 
         thing.setActionHandler(
             "action1",

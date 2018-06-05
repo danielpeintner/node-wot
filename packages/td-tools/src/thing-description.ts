@@ -29,46 +29,38 @@ export const DEFAULT_THING_TYPE: string = "Thing";
  */
 export default class Thing {
   /** collection of string-based keys that reference values of any type */
-  // readonly
   [key: string]: any; /* e.g., @context besides the one that are explitecly defined below */
-  // readonly 
   id: string;
-  // readonly
   name: string;
-  // readonly
   description: string;
-  // readonly
   base?: string;
 
   /** collection of string-based keys that reference a property of type Property2 */
-  // readonly
   properties: {
     [key: string]: Property
   };
 
   /** collection of string-based keys that reference a property of type Action2 */
-  // readonly
   actions: {
     [key: string]: Action;
   }
 
   /** collection of string-based keys that reference a property of type Event2 */
-  // readonly
   events: {
     [key: string]: Event;
   }
-  // readonly
   securityDefinitions: Security;
 
   /** Web links to other Things or metadata */
   public link?: Array<any>;
 
   constructor() {
-    // this.context = [DEFAULT_HTTPS_CONTEXT];
-    // this.semanticType = []; // DEFAULT_THING_TYPE
-    // this.metadata = [];
-    // this.interaction = [];
-    // this.link = []
+    this["@context"] = DEFAULT_HTTPS_CONTEXT;
+    this["@type"] = DEFAULT_THING_TYPE;
+    this.properties = {};
+    this.actions = {};
+    this.events = {};
+    this.link = []
   }
 }
 
@@ -91,6 +83,11 @@ export class Form {
   mediaType: string;
   rel: string;
   security: string; /* FIXME: what type */
+
+  constructor(href?: string, mediaType?: string) {
+    if (href) this.href = href;
+    if (mediaType) this.mediaType = mediaType;
+  }
 }
 
 export class Property extends Interaction {

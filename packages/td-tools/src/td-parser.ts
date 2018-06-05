@@ -38,6 +38,16 @@ function stringToThingDescription(tdJson: string): Thing {
     }
   }
 
+  if (typeof td.properties !== 'object' || td.properties === null) {
+    td.properties = {};
+  }
+  if (typeof td.actions !== 'object' || td.actions === null) {
+    td.actions = {};
+  }
+  if (typeof td.events !== 'object' || td.events === null) {
+    td.events = {};
+  }
+
   /*
   for (var fieldNameRoot in tdPlain) {
     if (tdPlain.hasOwnProperty(fieldNameRoot)) {

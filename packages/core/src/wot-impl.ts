@@ -45,7 +45,7 @@ export default class WoTImpl implements WoT.WoTFactory {
         return new Promise<WoT.ThingDescription>((resolve, reject) => {
             let client = this.srv.getClientFor(Helpers.extractScheme(uri));
             console.info(`WoTImpl fetching TD from '${uri}' with ${client}`);
-            client.readResource(new TD.InteractionForm(uri, "application/ld+json"))
+            client.readResource(new TD.Form(uri, "application/ld+json"))
                 .then((content) => {
                     if (content.mediaType !== "application/ld+json") {
                         console.warn(`WoTImpl parsing TD from '${content.mediaType}' media type`);
